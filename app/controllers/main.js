@@ -1,4 +1,5 @@
 let callapi = new Callapi();
+let validation = new Validation();
 let productPicFromSV = "";
 
 getListProduct();
@@ -26,14 +27,12 @@ const renderdata = (data) => {
         <td class="tm-product-name">${product.screen}</td>
         <td class="tm-product-name">${product.backCamera}</td>
         <td class="tm-product-name">${product.frontCamera}</td>
-        <td class="tm-product-name"><img class="w-50" src="${
-          product.img
-        }" alt=""></td>
+        <td class="tm-product-name"><img class="w-50" src="../../img/${product.img}" alt=""></td>
         <td class="tm-product-name">${product.desc}</td>
         <td class="tm-product-name">${product.type}</td>
         <td>
         <div class="d-flex">
-          <a onclick="handleDelete(${product.id});"class="tm-product-delete-link m-1">
+          <a onclick="handleDelete(${product.id})" class="tm-product-delete-link m-1">
             <i
               class="far fa-trash-alt tm-product-delete-icon"
             ></i>
@@ -78,7 +77,7 @@ const handleEdit = (id) => {
     document.getElementById("type").value = product.type;
     document.getElementById("description").value = product.desc;
     chooseFile(productPicFromSV);
-    document.getElementById("productImage").innerHTML =  `<img src="${productPicFromSV}" id="productImg" style="object-fit: cover; width: 180px;"></img>`
+    document.getElementById("productImage").innerHTML =  `<img src="../../img/${productPicFromSV}" id="productImg" style="object-fit: cover; width: 180px;"></img>`
   })
   .catch(function (error){
     console.log(error);
@@ -116,7 +115,6 @@ const handleUpdate = (id) => {
   })
 };
 
-
 //Add product
 document.getElementById("btnAdd").addEventListener("click", function () {
   document.getElementsByClassName("modal-title")[0].innerHTML = "Add New Product";
@@ -126,20 +124,8 @@ document.getElementById("btnAdd").addEventListener("click", function () {
 
 
 const handleAdd = () => {
-  let name = document.getElementById('name').value;
-  let price = document.getElementById("price").value;
-  let screen = document.getElementById("screen").value;
-  let backCamera = document.getElementById("bcamera").value;
-  let frontCamera = document.getElementById("fcamera").value;
-  let img = "";
-  if (document.getElementById("imgFile").files.length > 0) {
-    img = document.getElementById("imgFile").files[0].name;
-  };
-  let desc = document.getElementById("description").value;
-  let type = document.getElementById("type").value;
-
-  let product = new Product(``, name, price, screen, backCamera, frontCamera, img, desc, type);
-
+  let product = getDataAdd(true);
+  if(product){
   callapi
   .addProduct(product)
   .then(function(){
@@ -150,6 +136,7 @@ const handleAdd = () => {
   .catch(function(error){
     console.log(error);
   })
+  }
 };
 
 
@@ -170,3 +157,54 @@ $('#myModal').on('hidden.bs.modal', function () {
     $('#myModal form')[0].reset();
     document.getElementById("productImage").innerHTML =  `<img src="" id="productImg" style="object-fit: cover; width: 180px;"></img>`
     });
+
+const getDataAdd = (isAdd) => {
+  let name = document.getElementById("name").value;
+  let price = document.getElementById("price").value;
+  let screen = document.getElementById("screen").value;
+  let backCamera = document.getElementById("bcamera").value;
+  let frontCamera = document.getElementById("fcamera").value;
+  let img = "";
+  if (document.getElementById("imgFile").files.length > 0) {
+    img = document.getElementById("imgFile").files[0].name;
+  };
+  let desc = document.getElementById("description").value;
+  let type = document.getElementById("type").value;
+
+    /**
+   * Validation
+   */
+    var isValid = true;
+
+    if (isAdd) {
+      //Name
+      isValid &= validation.checkEmpty(name, "tbName", "Enter product's names") &&
+      validation.checkLongString(name, "tbName", "Product name must be between 4 and 20 character long", 4, 20)
+    }
+
+      //Price
+      isValid = validation.checkEmpty(price, "tbPrice", "Enter product's price");
+
+      //Screen
+      isValid = validation.checkEmpty(screen, "tbScreen", "Enter product's screen");
+
+      //Back Cam
+      isValid = validation.checkEmpty(backCamera, "tbBcamera", "Enter product's Back Camera");
+
+      //Front Cam
+      isValid = validation.checkEmpty(frontCamera, "tbFcamera", "Enter product's Front Camera");
+
+      //Img
+      isValid = validation.checkEmpty(img, "tbImg", "Upload Product's Image");
+
+      //Description
+      isValid = validation.checkEmpty(desc, "tbDesc", "Enter product's Front Camera");
+
+
+    if (!isValid) return null;
+
+
+  let product = new Product(``, name, price, screen, backCamera, frontCamera, img, desc, type);
+
+  return product;
+};
